@@ -70,59 +70,21 @@ error_msg() {
     exit 1
 }
 
-if [ $(id -u) -gt 0 ]; then
-    echo -e "$(bold_red Error:) Only root can run $0"
-    echo -e "Use "$(bold_text "su -c $0")" or "$(bold_text "sudo $0")
-    exit 1
-fi
+#if [ $(id -u) -gt 0 ]; then
+#    echo -e "$(bold_red Error:) Only root can run $0"
+#    echo -e "Use "$(bold_text "su -c $0")" or "$(bold_text "sudo $0")
+#    exit 1
+#fi
 
 TARANTULA_REPO="https://github.com/prove/tarantula.git"
 
-which lsb_release > /dev/null 2> /dev/null
-if [ $? -gt 0 ]; then
-    error_msg "lsb_release not found. Please install redhat-lsb.( # yum install redhat-lsb ) and try again"
-fi
-DISTRO=$(lsb_release -a 2> /dev/null | grep "Distributor ID" | sed "s/.*\:\s//")
-
-if [ "$DISTRO" = "CentOS" ] \
-    || [[ "$DISTRO" = *RedHat* ]]; then
-    # Check if EPEL repos are available
-    yum repolist | grep epel > /dev/null 2> /dev/null
-    if [ $? -gt 0 ]; then
-        echo "$(color_yellow Warning:) EPEL repositories are not available."
-        echo "Please enable EPEL and try again."
-        echo "More information at: <http://fedoraproject.org/wiki/EPEL>"
-        exit 1
-    fi
-fi
-
-if [ "$DISTRO" = "Fedora" ] \
-    || [ "$DISTRO" = "CentOS" ] \
-    || [ "$DISTRO" = "AmazonAMI" ] \
-    || [[ "$DISTRO" = *RedHat* ]]; then
-    echo "Installing dependencies with yum..."
-    yum install gcc irb mysql-devel pcre openssl libxml2-devel memcached \
-        mysql-server ruby ruby-devel rubygems zlib-devel git \
-        gcc-c++ curl-devel zlib-devel httpd-devel apr-devel apr-util-devel httpd \
-        system-config-firewall-tui
-    DEFAULT_APACHE_USER="apache"
-elif [ "$DISTRO" = "Ubuntu" ] \
-    || [ "$DISTRO" = "Debian" ]; then
-    PATH="/var/lib/gems/1.8/bin:$PATH"
-    echo "Installing dependencies with apt..."
-    apt-get update
-    apt-get install \
-        build-essential irb libmysqlclient-dev libpcre3 libssl-dev libxml2-dev \
-        memcached mysql-server ruby ruby1.8-dev \
-        rdoc zlib1g-dev libopenssl-ruby openssl git-core \
-        apache2 libcurl4-openssl-dev zlib1g-dev apache2-threaded-dev \
-        libapr1-dev libaprutil1-dev
-    a2enmod rewrite
-    DEFAULT_APACHE_USER="www-data"
-else
-    error_msg "Unknown distribution: $DISTRO."\
-              "Unable to continue install process!"
-fi
+#which lsb_release > /dev/null 2> /dev/null
+#if [ $? -gt 0 ]; then
+#    error_msg "lsb_release not found. Please install redhat-lsb.( # yum install redhat-lsb ) and try again"
+#fi
+# DISTRO=$(lsb_release -a 2> /dev/null | grep "Distributor ID" | sed "s/.*\:\s//")
+DISTRO="CentOS"
+DEFAULT_APACHE_USER="apache"
 
 # Start mysql server if it's not already running
 pgrep mysql > /dev/null
@@ -141,11 +103,7 @@ fi
 echo "Installing Passenger..."
 gem install passenger > /dev/null 2> /dev/null
 
-VERSION="$1"
-
-if [ -z "$VERSION" ]; then
-    VERSION=master
-fi
+VERSION=master
 
 if [ -d /opt/tarantula/rails/.git ]; then
     cd /opt/tarantula/rails
@@ -214,18 +172,7 @@ generate_config() {
     fi
 }
 
-if [ "$DISTRO" = "Ubuntu" ] \
-    || [ "$DISTRO" = "Debian" ]; then
-    set -e
-    generate_config /etc/apache2/sites-available/tarantula
-    a2dissite default
-    a2ensite tarantula
-    echo "After that install mod_passenger as root by running: "$(bold_text "sudo passenger-install-apache2-module")" and restart Apache: "$(bold_text "sudo /etc/init.d/apache2 restart")
-elif [ "$DISTRO" = "Fedora" ] \
-    || [ "$DISTRO" = "CentOS" ] \
-    || [ "$DISTRO" = "AmazonAMI" ] \
-    || [[ "$DISTRO" = *RedHat* ]]; then
-    set -e
-    generate_config /etc/httpd/conf.d/tarantula.conf
-    echo "Compile Apache native mod_passenger as root by running: "$(bold_text "passenger-install-apache2-module")" and restart Apache: "$(bold_text "service httpd restart")
-fi
+set -e
+generate_config /etc/httpd/conf.d/tarantula.conf
+echo "Compile Apache native mod_passenger as root by running: "$(bold_text "passenger-install-apache2-module")" and restart Apache: "$(bold_text "service httpd restart")
+
