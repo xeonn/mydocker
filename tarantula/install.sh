@@ -92,14 +92,6 @@ if [ $? -gt 0 ]; then
     /etc/init.d/mysqld start
 fi
 
-# Install bundler globally which will handle all other gem installs
-# and dependencies
-which bundle > /dev/null 2> /dev/null
-if [ $? -gt 0 ]; then
-    echo "Installing Bundler..."
-    gem install bundler > /dev/null 2> /dev/null
-fi
-
 echo "Installing Passenger..."
 gem install passenger > /dev/null 2> /dev/null
 
