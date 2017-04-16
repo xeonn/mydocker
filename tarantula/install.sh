@@ -95,26 +95,17 @@ fi
 echo "Installing Passenger..."
 gem install passenger > /dev/null 2> /dev/null
 
-VERSION=master
+VERSION=2014.26.1
 
-if [ -d /opt/tarantula/rails/.git ]; then
-    cd /opt/tarantula/rails
-    set -e
-    git checkout master
-    git pull
-    git checkout "$VERSION"
-    git submodule update
-    set +e
-else
-    rm -rf /opt/tarantula/rails
     set -e
     git clone "$TARANTULA_REPO" /opt/tarantula/rails
     cd /opt/tarantula/rails
     git submodule init
     git checkout "$VERSION"
     git submodule update
+    # Apply patch
+	patch -p1 < /01-add-missing-dependency-echoe.patch 
     set +e
-fi
 
 # Check and update symlinks for attachment_files, log, tmp tmp/pids
 mkdir -p /opt/tarantula/attachment_files /opt/tarantula/log
@@ -124,12 +115,7 @@ update_symlink /opt/tarantula/log /opt/tarantula/rails/log
 update_symlink /opt/tarantula/tmp /opt/tarantula/rails/tmp
 
 # Change proper file permissions
-echo -e "\n"$(bold_text "Which user will be running Tarantula processes? [$DEFAULT_APACHE_USER]")
-read TARANTULA_USER
-TARANTULA_USER=$(echo $TARANTULA_USER | sed -e "s/\(^\s*\|\s*$\)//g")
-if [ -z "$TARANTULA_USER" ]; then
-    TARANTULA_USER=$DEFAULT_APACHE_USER;
-fi
+TARANTULA_USER=$DEFAULT_APACHE_USER;
 
 id -u $TARANTULA_USER > /dev/null 2> /dev/null
 if [ $? -gt 0 ]; then

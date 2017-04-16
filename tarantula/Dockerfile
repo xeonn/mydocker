@@ -5,26 +5,38 @@ FROM centos:6
 
 MAINTAINER Onn Khairuddin bin Rahmat version: 0.1
 
-ENV RUBY_MAJOR 2.0
-ENV RUBY_VERSION 2.0.0-p648
+ENV RUBY_MAJOR 2.1
+ENV RUBY_VERSION 2.1.4
 
+# some of ruby's build scripts are written in ruby
+# we purge this later to make sure our final image uses what we just built
 RUN yum -y update && \
-yum -y install make gcc readline-devel zlib-devel openssl-devel libyaml && \
-yum -y install epel-release wget autoconf automake && \
+yum -y install make gcc readline-devel zlib-devel openssl-devel libyaml libyaml-devel && \
+yum -y install epel-release wget && \
 yum -y install irb mysql-devel pcre openssl libxml2-devel memcached \
         mysql-server ruby zlib-devel git \
         gcc-c++ curl-devel zlib-devel httpd-devel apr-devel apr-util-devel httpd
 
-# some of ruby's build scripts are written in ruby
-RUN mkdir -p /usr/src/ruby \
-    && curl -SL "http://cache.ruby-lang.org/pub/ruby/$RUBY_MAJOR/ruby-$RUBY_VERSION.tar.bz2" | tar -xjC /usr/src/ruby --strip-components=1 \
-    && cd /usr/src/ruby \
-    && autoconf \
-    && ./configure --disable-install-doc \
+# To Build ruby 2.1, Autoconf version 2.67 or higher is required
+RUN mkdir -p /usr/src/autoconf \
+    && curl -SL "http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz " \
+    | tar -xzC /usr/src/autoconf \
+    && cd /usr/src/autoconf/autoconf-2.69 \
+    && ./configure \
     && make \
-    && yum remove -y ruby \
     && make install \
-    && rm -r /usr/src/ruby
+    && rm -r /usr/src/autoconf
+
+RUN mkdir -p /usr/src/ruby \
+	&& curl -SL "http://cache.ruby-lang.org/pub/ruby/$RUBY_MAJOR/ruby-$RUBY_VERSION.tar.bz2" \
+		| tar -xjC /usr/src/ruby --strip-components=1 \
+	&& cd /usr/src/ruby \
+	&& autoconf \
+	&& ./configure --disable-install-doc \
+	&& make -j"$(nproc)" \
+	&& yum remove -y ruby \
+	&& make install \
+	&& rm -r /usr/src/ruby
 
 # skip installing gem documentation
 RUN echo 'gem: --no-rdoc --no-ri' >> "$HOME/.gemrc"
@@ -39,11 +51,13 @@ RUN gem install bundler \
 # don't create ".bundle" in all our apps
 ENV BUNDLE_APP_CONFIG $GEM_HOME
 
+#RUN gem install bundler
+
 ENV TARANTULA_REPO "https://github.com/prove/tarantula.git"
 
+RUN wget https://raw.githubusercontent.com/xeonn/mydocker/master/tarantula/patch/01-add-missing-dependency-echoe.patch
 RUN wget https://raw.githubusercontent.com/xeonn/mydocker/master/tarantula/install.sh
+
 RUN bash install.sh
 
-RUN yum erase -y wget autoconf automake && yum clean all
-
-CMD [ "irb" ]
+RUN yum erase -y wget automake && yum clean all
