@@ -92,8 +92,10 @@ if [ $? -gt 0 ]; then
     /etc/init.d/mysqld start
 fi
 
-echo "Installing Passenger..."
-gem install passenger > /dev/null 2> /dev/null
+# executed in docker file
+#echo "Installing Passenger..."
+#gem install rack -v=1.6.5
+#gem install passenger > /dev/null 2> /dev/null
 
 VERSION=2014.26.1
 
@@ -135,6 +137,18 @@ echo "Verify/edit database settings in file: "\
      $(bold_text "/opt/tarantula/rails/config/database.yml")
 echo "If db settings are OK run "$(bold_text "RAILS_ENV=production rake tarantula:install")" in Rails root (/opt/tarantula/rails) to initialize DB."
 
+sleep 5
+
+set -e
+echo -e "Installing passenger..."
+gem install passenger -v=4.0.45
+passenger-install-apache2-module -a
+set +e
+
+#echo 'Installing Tarantula'
+echo -e "$URL\n$EMAIL\n$SMTP_HOST\n$SMTP_PORT\n$SMTP_DOMAIN" | \
+		rake tarantula:install
+
 generate_config() {
     if [ ! -f $1 ]; then
         passenger-install-apache2-module --snippet > $1
@@ -154,3 +168,5 @@ set -e
 generate_config /etc/httpd/conf.d/tarantula.conf
 echo "Compile Apache native mod_passenger as root by running: "$(bold_text "passenger-install-apache2-module")" and restart Apache: "$(bold_text "service httpd restart")
 
+cd /opt/tarantula/rails
+#RAILS_ENV=production rake tarantula:install
