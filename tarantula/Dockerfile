@@ -3,7 +3,7 @@
 
 FROM centos:6
 
-MAINTAINER Onn Khairuddin bin Rahmat version: 0.1
+MAINTAINER Onn Khairuddin bin Rahmat
 
 ENV URL http://localhost/
 ENV EMAIL tarantula@example.org
