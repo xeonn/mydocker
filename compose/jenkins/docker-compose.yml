@@ -4,6 +4,7 @@ version: '3.2'
 services:
   sonarqube:
     image: sonarqube:lts
+    command: -Dsonar.web.context=/sonarqube
     restart: always
     ports:
       - 7000:9000
