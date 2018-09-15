@@ -1,0 +1,30 @@
+# docker run --restart always --privileged=true --name Jenkins  --publish 8000:8080  --publish 50000:50000  -e JENKINS_OPTS="--prefix=/jenkins"  --mount type=volume,src=jenkins,dst=/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock jenkins/jenkins:lts
+
+version: '3.2'
+services:
+  sonarqube:
+    image: sonarqube:lts
+    restart: always
+    ports:
+      - 7000:9000
+      - 7092:9092
+    container_name: sonarqube
+  jenkins:
+    image: jenkinsci/blueocean:1.8.2
+    restart: always
+    environment:
+     - JENKINS_OPTS= '--prefix=/jenkins'
+    privileged: 'true'
+    user: root
+    ports:
+      - 7080:8080
+      - 50000:50000
+    container_name: jenkins
+    volumes:
+      - jenkins:/var/jenkins_home 
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - sonarqube
+volumes:
+  jenkins:
+
