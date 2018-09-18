@@ -11,7 +11,8 @@ services:
       - 7092:9092
     container_name: sonarqube
   jenkins:
-    image: jenkinsci/blueocean:1.8.2
+    build: 
+      context: jenkins
     restart: always
     environment:
      - JENKINS_OPTS= '--prefix=/jenkins'
@@ -28,4 +29,6 @@ services:
       - sonarqube
 volumes:
   jenkins:
+    external:
+      name: jenkins_jenkins
 
