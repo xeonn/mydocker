@@ -2,6 +2,20 @@
 
 version: '3.2'
 services:
+  db:
+    image: mysql:5.7
+    networks:
+     - cicd_default
+    container_name: sonarmysql
+    environment:
+     - MYSQL_ROOT_HOST=%
+     - MYSQL_ROOT_PASSWORD=sonar
+     - MYSQL_DATABASE=sonar
+     - MYSQL_USER=sonar
+     - MYSQL_PASSWORD=sonar
+    volumes:
+     - sonarmysql_db:/var/lib/mysql
+
   sonarqube:
     image: sonarqube:lts
     command: -Dsonar.web.context=/sonarqube
@@ -10,6 +24,15 @@ services:
       - 7000:9000
       - 7092:9092
     container_name: sonarqube
+    environment:
+     - SONARQUBE_JDBC_USERNAME=sonar
+     - SONARQUBE_JDBC_PASSWORD=sonar
+     - SONARQUBE_JDBC_URL=jdbc:mysql://sonarmysql:3306/sonar?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&useConfigs=maxPerformance&useSSL=false
+    networks:
+     - cicd_default 
+    depends_on:
+     - db
+  
   jenkins:
     build: 
       context: jenkins
@@ -25,10 +48,12 @@ services:
     volumes:
       - jenkins:/var/jenkins_home 
       - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - sonarqube
+    networks:
+     - cicd_default
 volumes:
   jenkins:
-    external:
-      name: jenkins_jenkins
+  sonarmysql_db:
 
+networks:
+  cicd_default:
+    external: true
