@@ -1,10 +1,14 @@
 version: "3"
 services:
   portal:
-    image: ctliv/liferay:7_0_6-GA7
+    image: esystemstech/liferay:7.0.6-ga7
     depends_on:
       - db
     environment:
+      - DB_HOST=db
+      - DB_SCHEMA=lportal
+      - DB_USER=lportal
+      - DB_PASSWORD=lportal
       - LIFERAY_DEBUG=1
       - VM_HOST=vm-default
     networks:
@@ -16,7 +20,7 @@ services:
       - "443:8443"
       - "8999:8999"
     volumes:
-      - liferay_data:/var/liferay/deploy
+      - liferay_data:/opt/liferay/home/data
     deploy:
       placement:
         constraints: [node.hostname == tanker01.abyres.net]
@@ -27,7 +31,7 @@ services:
     ports:
       - "3306:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=adminpwd
+      - MYSQL_ROOT_PASSWORD=liferay
       - MYSQL_USER=lportal
       - MYSQL_PASSWORD=lportal
       - MYSQL_DATABASE=lportal
