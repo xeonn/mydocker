@@ -1,0 +1,51 @@
+version: "3"
+services:
+  portal:
+    image: ctliv/liferay:7_0_6-GA7
+    depends_on:
+      - db
+    environment:
+      - LIFERAY_DEBUG=1
+      - VM_HOST=vm-default
+    networks:
+      - net
+    ports:
+      - "2222:22"
+      - "1099:1099"
+      - "8100:8080"
+      - "443:8443"
+      - "8999:8999"
+    volumes:
+      - liferay_data:/var/liferay/deploy
+    deploy:
+      placement:
+        constraints: [node.hostname == tanker01.abyres.net]
+  db:
+    image: mysql:5.7
+    networks:
+      - net
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=adminpwd
+      - MYSQL_USER=lportal
+      - MYSQL_PASSWORD=lportal
+      - MYSQL_DATABASE=lportal
+    volumes:
+      - liferay_db:/var/lib/mysql
+    deploy:
+      placement:
+        constraints: [node.hostname == tanker02.abyres.net]
+
+volumes:
+  liferay_data:
+    external:
+      name: liferay_data
+  liferay_db:
+    external:
+      name: liferay_db
+
+networks:
+  net:
+    external:
+      name: liferay_net
