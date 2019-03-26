@@ -29,6 +29,8 @@ services:
      - SONARQUBE_JDBC_USERNAME=sonar
      - SONARQUBE_JDBC_PASSWORD=sonar
      - SONARQUBE_JDBC_URL=jdbc:mysql://sonarmysql:3306/sonar?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&useConfigs=maxPerformance&useSSL=false
+    volumes:
+     - sonar_ext:/opt/sonarqube/extensions
     networks:
      - cicd_default 
     depends_on:
@@ -54,6 +56,7 @@ services:
 volumes:
   jenkins:
   sonarmysql_db:
+  sonar_ext:
 
 networks:
   cicd_default:
